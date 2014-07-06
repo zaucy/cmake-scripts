@@ -1,0 +1,59 @@
+set(SDL2_VERSION "2.0.3")
+
+set(SDL2_SOURCE_DIR "${CMAKE_BINARY_DIR}/SDL2-${SDL2_VERSION}.src")
+set(SDL2_BINARY_DIR "${CMAKE_BINARY_DIR}/SDL2-${SDL2_VERSION}.bin")
+set(SDL2_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/SDL2-${SDL2_VERSION}")
+
+if(EXISTS "${CMAKE_BINARY_DIR}/SDL2-${SDL2_VERSION}.tar.gz")
+
+else()
+	
+	file(DOWNLOAD "https://www.libsdl.org/release/SDL2-${SDL2_VERSION}.tar.gz" "${CMAKE_BINARY_DIR}/SDL2-${SDL2_VERSION}.tar.gz")
+	
+endif()
+
+if(EXISTS "${SDL2_SOURCE_DIR}")
+
+else()
+	
+	file(MAKE_DIRECTORY ${SDL2_SOURCE_DIR}.tmp)
+	
+	execute_process(
+		COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_BINARY_DIR}/SDL2-${SDL2_VERSION}.tar.gz . ../
+		WORKING_DIRECTORY ${SDL2_SOURCE_DIR}.tmp
+	)
+	
+	file(RENAME "${SDL2_SOURCE_DIR}.tmp/SDL2-${SDL2_VERSION}" "${SDL2_SOURCE_DIR}.tmp/SDL2-${SDL2_VERSION}.src")
+	file(RENAME "${SDL2_SOURCE_DIR}.tmp/SDL2-${SDL2_VERSION}.src" "${SDL2_SOURCE_DIR}")
+	
+	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${SDL2_SOURCE_DIR}.tmp)
+endif()
+
+if(EXISTS "${SDL2_INSTALL_PREFIX}")
+	
+else()
+	file(MAKE_DIRECTORY "${SDL2_INSTALL_PREFIX}")
+	file(MAKE_DIRECTORY "${SDL2_BINARY_DIR}")
+	
+	message(STATUS "[${PROJECT_NAME} SDL2] Configuring...")
+	execute_process(
+		COMMAND ${CMAKE_COMMAND} ${SDL2_SOURCE_DIR} -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${SDL2_INSTALL_PREFIX} -DCMAKE_BUILD_TYPE=Release -DRENDER_D3D=OFF -DDIRECTX=OFF
+		WORKING_DIRECTORY ${SDL2_BINARY_DIR}
+		OUTPUT_QUIET
+	)
+	
+	message(STATUS "[${PROJECT_NAME} SDL2] Building...")
+	execute_process(
+		COMMAND ${CMAKE_COMMAND} --build .
+		WORKING_DIRECTORY ${SDL2_BINARY_DIR}
+		OUTPUT_QUIET
+	)
+	
+	message(STATUS "[${PROJECT_NAME} SDL2] Installing...")
+	execute_process(
+		COMMAND ${CMAKE_COMMAND} -P ${SDL2_BINARY_DIR}/cmake_install.cmake
+		OUTPUT_QUIET
+	)
+endif()
+
+message(STATUS "[${PROJECT_NAME} SDL2] DONE.")
